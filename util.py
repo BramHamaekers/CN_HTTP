@@ -27,7 +27,7 @@ def get_path_from_uri(uri: str) -> str:
     return path
 
 
-def write_html(body):
+def write_html(body: str) -> None:
     print('Writing body to body.html')
     html_file = open("body.html", "w")
     html_file.write(body)
@@ -36,14 +36,19 @@ def write_html(body):
 
 
 
-def get_image_paths_from_html(body):
+def get_image_paths_from_html(body:str) -> list[str]:
     print("Searching for images")
     tags = re.findall('<img.*?>', body)  # regular expression looking for images
     print(len(tags), 'images found')
 
+    # Get image paths
+    paths: list[str] = []
     for tag in tags:
         result = re.findall('src="/.*?"', tag)
         path = result[0][6:-1]
+        paths.append(path)
+
+    return paths
 
 
 COMMAND_INDEX: int = 0

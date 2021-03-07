@@ -16,8 +16,8 @@ def create_request(command: str, uri: str, port: int) -> str:
     return message
 
 
-def send(SOCKET: socket, request):
+def send(sock: socket, request: str) -> None:
     print("\r\nSending request...\r\n")
     message = request.encode(util.FORMAT)
-    SOCKET.send(message)
+    sock.send(message)
 

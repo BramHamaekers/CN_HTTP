@@ -9,7 +9,7 @@ def responds(sock: socket, command: str):
         head_responds(sock)
 
 
-def get_responds(sock: socket):
+def get_responds(sock: socket) -> None:
 
     # Parse head
     init: list[str] = sock.recv(1024).decode(util.FORMAT).split('\r\n')   # receive enough date so it includes HEADER
@@ -27,7 +27,7 @@ def get_responds(sock: socket):
         get_responds_cl(sock, content_len, body)
 
 
-def get_responds_chunked(sock, body):
+def get_responds_chunked(sock: socket, body: list) -> None:
 
     # Convert body back to string
     body = '\r\n'.join(body[2:])
@@ -56,7 +56,7 @@ def get_responds_chunked(sock, body):
 
 
 # responds for GET command if encoding = Content-Length
-def get_responds_cl(sock: socket, content_len, body):
+def get_responds_cl(sock: socket, content_len: int, body: list) -> None:
 
     # Convert body back to string
     body = '\r\n'.join(body[1:])
@@ -79,7 +79,7 @@ def get_responds_cl(sock: socket, content_len, body):
     util.get_image_paths_from_html(body)
 
 
-def head_responds(sock: socket):
+def head_responds(sock: socket) -> None:
     recv = sock.recv(1024)          # Not a clean way of doing it, 1024 should be enough to receive HEAD
     recv = recv.decode(util.FORMAT)
     print(recv)
