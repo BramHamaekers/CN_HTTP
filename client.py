@@ -1,0 +1,61 @@
+import client_input
+import client_request
+import client_responds
+import socket
+
+# Global variables
+import util
+
+CONNECTED: bool = False
+SOCKET: socket
+
+
+def connect(uri: str, port: int) -> None:
+    global CONNECTED
+    global SOCKET
+
+    # connect the socket
+    host: str = util.get_host_from_uri(uri)
+    server_address: tuple = (host, port)
+    SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    SOCKET.connect(server_address)
+    CONNECTED = True
+
+
+# https://stackoverflow.com/questions/47658584/implementing-http-client-with-sockets-without-http-libraries-with-python
+def main() -> None:
+    try:
+        # Get http request input.
+        input: list[str] = client_input.get_input()
+    except SystemExit:
+        # close program on SystemExit error
+        exit()
+    except:
+        # If input was not valid, try again
+        main()
+    else:
+        # Assign input values
+        command: str = input[util.COMMAND_INDEX]
+        uri: str = input[util.URI_INDEX]
+        port: int = int(input[util.PORT_INDEX])
+        # If input was valid, handle the request
+        # TODO:
+        if not CONNECTED:
+            connect(uri, port)  # connect with uri and port
+        request: str = client_request.create_request(command, uri, port)
+        client_request.send(SOCKET, request)
+        client_responds.responds(SOCKET, command)
+        # accept new request
+        main()
+
+
+def get_socket() -> socket:
+    print(CONNECTED)
+    return SOCKET
+
+
+# Call the main method
+if __name__ == "__main__":
+    main()
+
+
