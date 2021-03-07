@@ -1,5 +1,2 @@
-#Body
-*.html
-
-"folders"
-*output
+test.py
+output/
