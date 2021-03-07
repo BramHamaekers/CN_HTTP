@@ -8,11 +8,15 @@ import util
 
 CONNECTED: bool = False
 SOCKET: socket
+HOST: str
+PORT: int
 
 
 def connect(uri: str, port: int) -> None:
     global CONNECTED
     global SOCKET
+    global HOST
+    global PORT
 
     # connect the socket
     host: str = util.get_host_from_uri(uri)
@@ -20,10 +24,13 @@ def connect(uri: str, port: int) -> None:
     SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     SOCKET.connect(server_address)
     CONNECTED = True
+    HOST = host
+    PORT = port
 
 
 # https://stackoverflow.com/questions/47658584/implementing-http-client-with-sockets-without-http-libraries-with-python
 def main() -> None:
+
     try:
         # Get http request input.
         input: list[str] = client_input.get_input()
@@ -42,10 +49,16 @@ def main() -> None:
         # TODO:
         if not CONNECTED:
             connect(uri, port)  # connect with uri and port
-        request: str = client_request.create_request(command, uri, port)
+
+        # extract host and path from uri
+        host: str = util.get_host_from_uri(uri)
+        path: str = util.get_path_from_uri(uri)
+
+        request: str = client_request.create_request(command, host, path, port)
         client_request.send(SOCKET, request)
-        client_responds.responds(SOCKET, command)
+        client_responds.responds(SOCKET, command, host, port)
         # accept new request
+        print('Request completed')
         main()
 
 

@@ -1,12 +1,9 @@
 import util
 import socket
+import client_responds
 
 
-def create_request(command: str, uri: str, port: int) -> str:
-
-    # extract host and path from uri
-    host: str = util.get_host_from_uri(uri)
-    path: str = util.get_path_from_uri(uri)
+def create_request(command: str, host: str, path: str, port: int) -> str:
 
     # Construct the http request message
     message = command + ' /' + path + ' HTTP/1.1\r\n'
@@ -20,4 +17,12 @@ def send(sock: socket, request: str) -> None:
     print("\r\nSending request...\r\n")
     message = request.encode(util.FORMAT)
     sock.send(message)
+
+
+def fetch_images(body, host: str, port: int, sock: socket):
+    paths = util.get_image_paths_from_html(body)
+    for path in paths:
+        img_request = create_request('GET', host, path, port)
+        send(sock, img_request)
+        client_responds.get_images_responds(sock, path)
 

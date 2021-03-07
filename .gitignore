@@ -1,2 +1,5 @@
 #Body
 *.html
+
+"folders"
+*output
