@@ -3,8 +3,9 @@ import client_request
 import client_responds
 import socket
 
-# Global variables
 import util
+# Global variables
+
 
 CONNECTED: bool = False
 SOCKET: socket

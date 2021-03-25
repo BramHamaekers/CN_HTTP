@@ -22,6 +22,7 @@ def get_responds(sock: socket, host: str, port: int) -> None:
     # Parse head
     init: list[str] = sock.recv(1024).decode(util.FORMAT).split('\r\n')   # receive enough date so it includes HEADER
 
+    print(init)
     separator = init.index('')  # Find index of separator between HEADER and BODY
     head = init[:separator]     # Split HEADER from BODY
     body = init[separator:]     # Split BODY from HEADER
@@ -89,7 +90,8 @@ def get_responds_cl(sock: socket, content_len: int, body: list, host: str, port:
 
 def get_images_responds(sock: socket, path):
     # Parse head
-    init: list[str] = sock.recv(1024).decode(util.FORMAT).split('\r\n')  # receive enough date so it includes HEADER
+    init: list[str] = sock.recv(1024).decode(util.FORMAT).split('\r\n')  # receive enough data so it includes HEADER
+    print(init)
 
     separator = init.index('')  # Find index of separator between HEADER and IMAGE
     head = init[:separator]  # Split HEADER from IMAGE
@@ -117,7 +119,7 @@ def get_images_responds(sock: socket, path):
 
 
 def head_responds(sock: socket) -> None:
-    recv = sock.recv(1024)          # Not a clean way of doing it, 1024 should be enough to receive HEAD
+    recv = sock.recv(1024)          # 1024 should be enough to receive HEAD
     recv = recv.decode(util.FORMAT)
     print(recv)
     return

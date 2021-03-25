@@ -23,6 +23,8 @@ def get_input():
     # User can close program by typing command 'CLOSE'
     if len(val) == 1 and val[0] == 'CLOSE':
         raise SystemExit
+    elif not len(val) == 3:
+        print('Request should have 3 arguments:[COMMAND] [URI] [PORT]')
     try:
         is_valid_command(val[util.COMMAND_INDEX])
         is_valid_port(val[util.PORT_INDEX])  # check port before uri for improved performance.
