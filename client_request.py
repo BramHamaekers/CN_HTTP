@@ -10,6 +10,13 @@ def create_request(command: str, host: str, path: str, port: int) -> str:
     message += 'Host: ' + host + ':' + str(port) + '\r\n'
     message += 'Connection: keep-alive\r\n'
     message += '\r\n'
+
+    # PUT or POST
+    if command == 'PUT' or command == 'POST':
+        user_input = input('Input: ')
+        message += str(user_input)
+
+    print(message)
     return message
 
 

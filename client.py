@@ -47,9 +47,7 @@ def main() -> None:
         uri: str = input[util.URI_INDEX]
         port: int = int(input[util.PORT_INDEX])
         # If input was valid, handle the request
-        # TODO:
-        if not CONNECTED:
-            connect(uri, port)  # connect with uri and port
+        connect(uri, port)  # connect with uri and port
 
         # extract host and path from uri
         host: str = util.get_host_from_uri(uri)
@@ -58,10 +56,8 @@ def main() -> None:
         request: str = client_request.create_request(command, host, path, port)
         client_request.send(SOCKET, request)
         client_responds.responds(SOCKET, command, host, port)
-        # accept new request
-        print('Request completed')
-        main()
 
+        print('Request completed')
 
 def get_socket() -> socket:
     print(CONNECTED)

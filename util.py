@@ -1,9 +1,7 @@
 import re
 import os
-import base64
 
 FORMAT = 'latin_1'
-
 
 # returns the host given a uri
 # is not a fully functional parses, but functional within the scope of this project
@@ -58,23 +56,24 @@ def get_image_paths_from_html(body: str) -> list:
     # Get image paths
     paths: list[str] = []
     for tag in tags:
-        result = re.findall('src="/.*?"', tag)
-        if len(result) == 0:
+        results = re.findall('src="/.*?"', tag)
+        if len(results) == 0:
             # src might not start with a /
-            result = re.findall('src=".*?"', tag)
-            if len(result) == 0:
+            results = re.findall('src=".*?"', tag)
+            if len(results) == 0:
                 # img does not contain src tag
                 print("no source found for image")
-            path = result[0][5:-1]
+            for result in results:
+                paths.append(result[5:-1])
         else:
 
             # src path starts with '/' -> points to root dir
             # change path in html file by remove this '/'
             new_tag = tag.replace('src="/', 'src="')
             new_body = body.replace(tag, new_tag)
-            path = result[0][6:-1]
             write_html(new_body)
-        paths.append(path)
+            for result in results:
+                paths.append(result[6:-1])
 
     return paths
 

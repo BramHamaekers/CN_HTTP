@@ -30,7 +30,13 @@ def handle_client(server):
             request = conn.recv(HEADER).decode(util.FORMAT)
 
             if 'GET' in request:
-                server_commands.get(request, conn)
+                server_commands.get_or_head(request, conn, True)
+            elif 'HEAD' in request:
+                server_commands.get_or_head(request, conn, False)
+            elif 'PUT' in request:
+                server_commands.put(request, conn)
+            elif 'POST' in request:
+                server_commands.post(request, conn)
             elif request == "":                 # close connection if client sends an empty request
                 connected = False
             else:
@@ -59,8 +65,6 @@ def main() -> None:
     server.bind(server_address)
     start_server(server)
     print("[SERVER CREATED]:", ip, port)
-
-
 
 
 # Call the main method
