@@ -5,12 +5,17 @@ import client_request
 import os
 
 
+# Handler for receiving a responds from the server
+# Depending on the command the responds handling differs
+
 def responds(sock: socket, command: str, host: str, port: int):
     if command == 'GET':
         get_responds(sock, host, port)
     if command == 'HEAD':
         head_responds(sock)
 
+
+# Handler for the responds from a server given the GET command
 
 def get_responds(sock: socket, host: str, port: int) -> None:
 
@@ -25,6 +30,10 @@ def get_responds(sock: socket, host: str, port: int) -> None:
     head = init[:separator]     # Split HEADER from BODY
     body = init[separator:]     # Split BODY from HEADER
 
+    print('\r\n'.join(head) + '\r\n')
+    if 'HTTP/1.1 304 Not Modified' in init:     # Check for 304 Not Modified
+        return
+
     # Check which indication is used for the size of the body
     matching = [elem for elem in head if "Content-Length:" in elem]
     if 'Transfer-Encoding: chunked' in head:
@@ -33,6 +42,8 @@ def get_responds(sock: socket, host: str, port: int) -> None:
         content_len: int = int(matching[0].split(' ')[1])   # Get Content-Length
         get_responds_cl(sock, content_len, body, host, port)
 
+
+# Handler for the responds from the server given that the 'Transfer-Encoding: chunked' header was included
 
 def get_responds_chunked(sock: socket, body: list, host: str, port: int) -> None:
 
@@ -62,7 +73,8 @@ def get_responds_chunked(sock: socket, body: list, host: str, port: int) -> None
     client_request.fetch_images(body, host, port, sock)
 
 
-# responds for GET command if encoding = Content-Length
+# Handler for the responds from the server given that the 'Content-Length' header was included
+
 def get_responds_cl(sock: socket, content_len: int, body: list, host: str, port: int) -> None:
 
     # Convert body back to string
@@ -86,6 +98,8 @@ def get_responds_cl(sock: socket, content_len: int, body: list, host: str, port:
     client_request.fetch_images(body, host, port, sock)
 
 
+# Handler that deals with receiving images
+
 def get_images_responds(sock: socket, path):
     # Parse head
     init: list[str] = sock.recv(1024).decode(util.FORMAT).split('\r\n')  # receive enough data so it includes HEADER
@@ -93,6 +107,10 @@ def get_images_responds(sock: socket, path):
     separator = init.index('')  # Find index of separator between HEADER and IMAGE
     head = init[:separator]  # Split HEADER from IMAGE
     img = init[separator:]  # Split IMAGE from HEADER
+
+    print('\r\n'.join(head) + '\r\n')
+    if 'HTTP/1.1 304 Not Modified' in init:     # Check for 304 Not Modified
+        return
 
     # Find Content-Length of image
     matching = [elem for elem in head if "Content-Length:" in elem]
@@ -114,6 +132,7 @@ def get_images_responds(sock: socket, path):
     # write image to image file
     util.write_image(img, path)
 
+# Handler for the responds from a server given the HEAD command
 
 def head_responds(sock: socket) -> None:
     recv = sock.recv(1024)          # 1024 should be enough to receive HEAD

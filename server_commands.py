@@ -1,19 +1,29 @@
 import util
 import mimetypes
 from datetime import datetime
+from dateutil.parser import parse
+from tzlocal import get_localzone
 import pytz
 import os
 
 
+# Handler for dealing with an incoming GET or HEAD command
+
 def get_or_head(request, connection, get: bool):
     print(request)
 
+    # UCOMMENT_THIS_LINE_FOR_500_SERVER_ERROR
+
     # Parse HTTP header
-    headers = request.split('\n')
+    headers = request.split('\r\n')
     path = headers[0].split()[1]
 
     if path == '/':
         path = '/index.html'
+
+    if 'Host: ' not in request:                     # 400 Bad Request
+        bad_request_responds_400(connection, get)
+        return
 
     try:
         file = open('HTML PAGE' + path, 'rb')
@@ -24,9 +34,8 @@ def get_or_head(request, connection, get: bool):
         file_not_found_responds_404(connection, get)
         return
 
-    if 'Host: ' not in request:                     # 400 Bad Request
-        bad_request_responds_400(connection, get)
-        return
+    if 'If-Modified-Since: ' in request:
+        check_modified_date(headers, path, connection)
 
     content_len = len(content)
 
@@ -38,6 +47,7 @@ def get_or_head(request, connection, get: bool):
 
     send(connection, response)
 
+# Handler for dealing with an incoming PUT command
 
 def put(request, connection):
     print(request)
@@ -46,9 +56,8 @@ def put(request, connection):
     headers = request.split('\r\n')
     path = headers[0].split()[1]
 
-
-
-        #TODO: not allowed to change root path
+    if path == '/':     # Not allowed to change root path
+        return
 
     separator = headers.index('')  # Find index of separator between HEADER and BODY
     body = headers[separator + 1:]  # Split BODY from HEADER
@@ -61,6 +70,8 @@ def put(request, connection):
     return
 
 
+# Handler for dealing with an incoming POST command
+
 def post(request, connection):
     print(request)
 
@@ -68,11 +79,8 @@ def post(request, connection):
     headers = request.split('\r\n')
     path = headers[0].split()[1]
 
-    if path == '/':
-        path = '/index.html'
-        print("in here")
+    if path == '/':     # Not allowed to change root path
         return
-        # TODO: not allowed to change root path
 
     separator = headers.index('')  # Find index of separator between HEADER and BODY
     body = headers[separator + 1:]  # Split BODY from HEADER
@@ -85,6 +93,43 @@ def post(request, connection):
     file.close()  # close the file
     return
 
+
+# Function for dealing with 'If-Modified-Since header
+# will do nothing if the file was modified since the given date
+# this will result in normal GET behavior
+# If the file was modified since the given date
+# HTTP/1.1 304 Not Modified Responds will be sent to the client
+
+def check_modified_date(headers, path, connection):
+
+    # Get Date from header
+    matching = [elem for elem in headers if "If-Modified-Since:" in elem]
+    header_date = parse(' '.join(matching[0].split(' ')[1:]))
+
+    # Get modification date
+    local_tz = str(get_localzone())                             # Get local timezone
+    mod_time_since = os.path.getmtime('HTML PAGE' + path)       # Get date of modification
+    modification_date = datetime.fromtimestamp(mod_time_since)  # Convert to readable timestamp
+
+    # Convert to GMT
+    local = pytz.timezone(local_tz)
+    local_dt = local.localize(modification_date, is_dst=None)
+    gmt_modification_date = local_dt.astimezone(pytz.utc)       # GMT time of modification date.
+
+    if header_date < gmt_modification_date:                     # If the file has been modified since:
+        return                                                  # Do nothing -> Will result in normal GET behavior
+
+    # Get Date GMT
+    date = datetime.now(pytz.utc)
+
+    # Send 304 Not Modified
+    response = b'HTTP/1.1 304 Not Modified\r\n'
+    response += b'Date: ' + bytes(date.strftime("%a, %d %b %Y %X GMT"), util.FORMAT) + b'\r\n'
+    send(connection, response)
+
+
+# Will send a 'HTTP/1.1 400 Bad Request' response to the client
+# along with the '400.html' body
 
 def bad_request_responds_400(connection, get):
 
@@ -101,6 +146,9 @@ def bad_request_responds_400(connection, get):
     send(connection, response)
 
 
+# Will send a 'HTTP/1.1 404 Not Found' response to the client
+# along with the '404.html' body
+
 def file_not_found_responds_404(connection, get):
 
     # Get 404 Not Found html page
@@ -115,6 +163,8 @@ def file_not_found_responds_404(connection, get):
 
     send(connection, response)
 
+# Retrieves a header including 'Content-Type', 'Date' and 'Content-Length
+# given a path and the content_len of a file
 
 def get_header(path, content_len):
 
@@ -127,6 +177,8 @@ def get_header(path, content_len):
 
     return header
 
+
+# Sends a HTTP response to a client given a connection and a response
 
 def send(connection, response):
     connection.sendall(response)

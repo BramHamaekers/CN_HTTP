@@ -8,6 +8,9 @@ HEADER = 1024
 DISCONNECT_MESSAGE = "DISCONNECT!"
 
 
+# Start listening for requests by a client
+# Create a thread for a first client
+
 def start_server(server):
     server.listen()
 
@@ -15,6 +18,10 @@ def start_server(server):
     t = threading.Thread(target=handle_client, args=(server,))
     t.start()
 
+
+# accepts incoming connections
+# when a connection is accepted a new thread is created
+# to allow multiple clients to connect to the server at the same time
 
 def handle_client(server):
     conn, addr = server.accept()  # accept method is a blocking method.
@@ -28,6 +35,9 @@ def handle_client(server):
     while connected:
         try:
             request = conn.recv(HEADER).decode(util.FORMAT)
+            print(request)
+
+            # Check which command was included in the HTTP request
 
             if 'GET' in request:
                 server_commands.get_or_head(request, conn, True)
@@ -45,9 +55,18 @@ def handle_client(server):
             # exception occurs when terminal client closes connection -> close connection with socket
         except ConnectionResetError:
             connected = False
+        except Exception as err:        # Catch all other errors and send 500 Server Error
+            print('[ERROR]:', err)
+            response = b'HTTP/1.1 500 Server Error\r\n'
+            server_commands.send(conn, response)
+
     print("[CLOSE CONNECTION]", addr[0], "disconnected.")
     conn.close()
 
+
+# Main method of the HTTP server
+# First opens the server connection
+# Then starts the server functionality for dealing with HTTP requests
 
 def main() -> None:
 
@@ -56,7 +75,6 @@ def main() -> None:
     port = 5055
     hostname = socket.gethostname()
     ip = socket.gethostbyname(hostname)
-
 
     # create the server
 

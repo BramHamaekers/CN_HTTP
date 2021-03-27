@@ -1,44 +1,49 @@
 import socket
 import util
+from util import get_host_from_uri
+
 
 # define custom exceptions
-from util import get_host_from_uri, COMMAND_INDEX, URI_INDEX, PORT_INDEX
-
 
 class InvalidCommand(Exception):
     pass
+
+
 class InvalidURI(Exception):
     pass
+
+
 class InvalidPort(Exception):
     pass
 
 
-# Ask the user for input and check if the given input by the user is a valid input.
-def get_input():
+# Checks if the given arguments are valid arguments for the HTTP client
+# arguments: The arguments given when running the program
+
+def check_input(arguments):
 
     # Get input
-    val = input('>: ')
-    val = val.split(' ')
+    args: list = arguments[1:]
 
     # User can close program by typing command 'CLOSE'
-    if len(val) == 1 and val[0] == 'CLOSE':
+    if len(args) == 1 and args[0] == 'CLOSE':
         raise SystemExit
-    elif not len(val) == 3:
+    elif not len(args) == 3:
         print('Request should have 3 arguments:[COMMAND] [URI] [PORT]')
     try:
-        is_valid_command(val[util.COMMAND_INDEX])
-        is_valid_port(val[util.PORT_INDEX])  # check port before uri for improved performance.
-        is_valid_uri(val[util.URI_INDEX])
+        is_valid_command(args[util.COMMAND_INDEX])
+        is_valid_port(args[util.PORT_INDEX])  # check port before uri for improved performance.
+        is_valid_uri(args[util.URI_INDEX])
     except InvalidCommand as err:
-        print('InvalidCommand: Command ' + val[util.COMMAND_INDEX] + ' is not a valid command')
+        print('InvalidCommand: Command ' + args[util.COMMAND_INDEX] + ' is not a valid command')
         raise err
     except InvalidURI as err:
-        print('InvalidURI: URI ' + val[util.URI_INDEX] + ' is not a valid URI')
+        print('InvalidURI: URI ' + args[util.URI_INDEX] + ' is not a valid URI')
         raise err
     except InvalidPort as err:
-        print('InvalidPort: Port ' + val[util.PORT_INDEX] + ' is not a valid port')
+        print('InvalidPort: Port ' + args[util.PORT_INDEX] + ' is not a valid port')
         raise err
-    return val
+    return args
 
 
 # Check if the first argument of input is a valid command.
@@ -67,7 +72,7 @@ def is_valid_uri(uri: str) -> None:
 
 def is_valid_port(port: str) -> None:
     try:
-        val = int(port)
+        val: int = int(port)
         if val < 0:  # if not a positive int raise InvalidPort
             raise InvalidPort
     except ValueError:  # if port is not an int raise InvalidPort
